@@ -1,0 +1,8 @@
+png/
+tiff/
+*.png
+*.tif
+*.tiff
+
+**/png/
+**/tiff/
