@@ -26,10 +26,16 @@ def fetch_images(path, color=True, extension='*.png'):
                 # OpenCV logic
                 flag = cv2.IMREAD_COLOR if color else cv2.IMREAD_GRAYSCALE
                 img = cv2.imread(img_path, flag)
+                if img is None:
+                    print(f"Failed to load {img_path}")
+                    continue
 
             elif extension.lower() in ['*.tiff', '*.tif']:
                 # Tifffile logic
                 img = tifffile.imread(img_path)
+                if img is None:
+                    print(f"Failed to load {img_path}")
+                    continue
                 
                 # Manually convert TIFF to grayscale if requested and it has 3 channels
                 if not color and len(img.shape) == 3:
@@ -68,6 +74,16 @@ def get_patches(image, mask, dims = (256, 256), step=256):
     except Exception as e:
         print(f"Error during patch extraction: {e}")
         return None, None
+
+def save_patches(patch, format='tiff', path='patches/images'): 
+    for i in range(patch.shape[0]):
+        for j in range(patch.shape[1]):
+            single_patch = patch[i, j, :, :]
+            if format.lower() in ['.png', '.jpg', '.jpeg']:
+                cv2.imwrite(path + 'patch_' + str(i) + str(j) + '.' + format.lower(), single_patch)
+            elif format.lower() in ['tiff', '*.tif']: 
+                tifffile.imwrite(path + 'patch_'+ str(i) + str(j) + '.' + format.lower(), single_patch)
+
 
 
 train_images = fetch_images('train/images')
