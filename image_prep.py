@@ -4,6 +4,8 @@ import cv2
 import os 
 import numpy as np 
 import matplotlib.pyplot as plt 
+from patchify import patchify, unpatchify
+import tifffile
 
 
 BACKBONE = 'resnet34'
@@ -15,23 +17,38 @@ process_input = sm.get_preprocessing(BACKBONE)
 SIZE_X = 256
 SIZE_Y = 256 
 
-def fetch_images(path, color=True):
+def fetch_images(path, color=True, extension='*.png'):
     images = []
     for directory_path in glob.glob(path):
-        for img_path in glob.glob(os.path.join(directory_path, "*.png")):
+        for img_path in glob.glob(os.path.join(directory_path, extension)):
             
-            #lets get the image tensor 
-            element = cv2.IMREAD_COLOR if color else 0 
+            if extension.lower() in ['*.png', '*.jpg', '*.jpeg']:
+                # OpenCV logic
+                flag = cv2.IMREAD_COLOR if color else cv2.IMREAD_GRAYSCALE
+                img = cv2.imread(img_path, flag)
 
-            img = cv2.imread(img_path, element)
+            elif extension.lower() in ['*.tiff', '*.tif']:
+                # Tifffile logic
+                img = tifffile.imread(img_path)
+                
+                # Manually convert TIFF to grayscale if requested and it has 3 channels
+                if not color and len(img.shape) == 3:
+                    # Assumes RGB/BGR channel structure
+                    img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
 
             images.append(img)
     
     # to prep the images for machine learning processing ...
     # lets make them numpy arrays 
-    images = np.array(images)
+    try:
+        images = np.array(images)
+    except ValueError as e:
+        print("\n[WARNING] Could not convert to a single NumPy array!")
+        print("Your images likely have mismatched dimensions or channel counts.")
+        print(f"Error detail: {e}\n")
 
     return images 
+
 
 
 def extract_tiles(image, mask, tile_size=256):
