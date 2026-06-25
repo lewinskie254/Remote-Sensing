@@ -1,0 +1,4 @@
+kagglehub
+torch
+torchvision 
+segmentation-models-pytorch
