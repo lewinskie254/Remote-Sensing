@@ -50,31 +50,25 @@ def fetch_images(path, color=True, extension='*.png'):
     return images 
 
 
+def get_patches(image, mask, dims = (256, 256), step=256):
+    if not isinstance(dims, tuple):
+        print("dims must be a 1 by 2 tuple eg. (256, 256)")
+        return 
+    # Ensure inputs are numpy arrays
+    image, mask = np.array(image), np.array(mask)
+    
+    # Check if dimensions are divisible by the step/patch size
+    if (image.shape[0] % step != 0) or (image.shape[1] % step != 0):
+        print("Warning: Image dimensions are not divisible by patch size. Patchify may fail.")
+        
+    try:
+        patches_image = patchify(image, (*dims, image.shape[-1]), step=step)
+        patches_mask = patchify(mask, (*dims, 1), step=step)
+        return patches_image, patches_mask
+    except Exception as e:
+        print(f"Error during patch extraction: {e}")
+        return None, None
 
-def extract_tiles(image, mask, tile_size=256):
-
-    image_tiles = []
-    mask_tiles = []
-
-    H, W = mask.shape
-
-    for y in range(0, H - tile_size + 1, tile_size):
-        for x in range(0, W - tile_size + 1, tile_size):
-
-            image_tile = image[
-                y:y+tile_size,
-                x:x+tile_size
-            ]
-
-            mask_tile = mask[
-                y:y+tile_size,
-                x:x+tile_size
-            ]
-
-            image_tiles.append(image_tile)
-            mask_tiles.append(mask_tile)
-
-    return image_tiles, mask_tiles
 
 train_images = fetch_images('train/images')
 train_masks = fetch_images('mask_path', False)
