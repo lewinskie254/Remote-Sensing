@@ -75,10 +75,10 @@ def get_patches(image, mask, dims = (256, 256), step=256):
         print(f"Error during patch extraction: {e}")
         return None, None
 
-def save_patches(patch, format='tiff', path='patches/images'): 
-    for i in range(patch.shape[0]):
-        for j in range(patch.shape[1]):
-            single_patch = patch[i, j, :, :]
+def save_patches(patches, format='tiff', path='patches/images'): 
+    for i in range(patches.shape[0]):
+        for j in range(patches.shape[1]):
+            single_patch = patches[i, j, :, :]
             if format.lower() in ['.png', '.jpg', '.jpeg']:
                 cv2.imwrite(path + 'patch_' + str(i) + str(j) + '.' + format.lower(), single_patch)
             elif format.lower() in ['tiff', '*.tif']: 
