@@ -5,3 +5,5 @@ segmentation-models-pytorch
 opencv-python
 numpy 
 matplotlib 
+patchify
+tiffile
