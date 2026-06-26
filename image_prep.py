@@ -6,14 +6,6 @@ import matplotlib.pyplot as plt
 from patchify import patchify, unpatchify
 import tifffile
 
-
-
-
-#Import Image sizes (Will be varied for experiments )
-# to see how it performs on different sized models 
-SIZE_X = 256
-SIZE_Y = 256 
-
 def fetch_images(path, color=True, extension='*.png'):
     images = []
     for directory_path in glob.glob(path):
@@ -72,7 +64,7 @@ def get_patches(image, mask, dims = (256, 256), step=256):
         print(f"Error during patch extraction: {e}")
         return None, None
 
-def save_patches(patches, format='tiff', path='patches/images'): 
+def save_patches(patches, format='png', path='patches/images'): 
     for i in range(patches.shape[0]):
         for j in range(patches.shape[1]):
             single_patch = patches[i, j, :, :]
@@ -83,5 +75,3 @@ def save_patches(patches, format='tiff', path='patches/images'):
 
 
 
-train_images = fetch_images('train/images')
-train_masks = fetch_images('mask_path', False)

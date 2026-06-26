@@ -27,5 +27,10 @@ train_masks = fetch_images('png/train_masks', False)
 
 test_images = fetch_images('png/test')
 test_masks = fetch_images('png/test_labels', False)
+
 train_patches = [ get_patches(train_images[i], train_masks[i], (SIZE_X, SIZE_Y), SIZE_X) for i in range(len(train_images))] #default size 256 
 test_patches = [ get_patches(test_images[i], test_masks[i], (SIZE_X, SIZE_Y), SIZE_X) for i in range(len(test_images))] #default size 256 
+
+
+save_patches(train_patches, 'png', 'patches/train')
+save_patches(test_patches, 'png', 'patches/test')
