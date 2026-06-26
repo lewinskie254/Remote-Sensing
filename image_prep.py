@@ -1,5 +1,4 @@
 import glob 
-import segmentation_models_pytorch as sm 
 import cv2 
 import os 
 import numpy as np 
@@ -8,8 +7,6 @@ from patchify import patchify, unpatchify
 import tifffile
 
 
-BACKBONE = 'resnet34'
-process_input = sm.get_preprocessing(BACKBONE)
 
 
 #Import Image sizes (Will be varied for experiments )
