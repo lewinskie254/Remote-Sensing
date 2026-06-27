@@ -5,47 +5,65 @@ import numpy as np
 import matplotlib.pyplot as plt 
 from patchify import patchify, unpatchify
 import tifffile
+import tqdm 
 
-def fetch_images(path, color=True, extension='*.png'):
+from tqdm import tqdm  # Use from tqdm.notebook import tqdm if in Jupyter
+
+def fetch_images(path, color=True, extension='png'):
     images = []
-    for directory_path in glob.glob(path):
-        for img_path in glob.glob(os.path.join(directory_path, extension)):
-            
-            if extension.lower() in ['*.png', '*.jpg', '*.jpeg']:
-                # OpenCV logic
-                flag = cv2.IMREAD_COLOR if color else cv2.IMREAD_GRAYSCALE
-                img = cv2.imread(img_path, flag)
-                if img is None:
-                    print(f"Failed to load {img_path}")
-                    continue
-
-            elif extension.lower() in ['*.tiff', '*.tif']:
-                # Tifffile logic
-                img = tifffile.imread(img_path)
-                if img is None:
-                    print(f"Failed to load {img_path}")
-                    continue
-                
-                # Manually convert TIFF to grayscale if requested and it has 3 channels
-                if not color and len(img.shape) == 3:
-                    # Assumes RGB/BGR channel structure
-                    img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-
-            images.append(img)
+    all_img_paths = []
     
-    # to prep the images for machine learning processing ...
-    # lets make them numpy arrays 
+    ext = extension.replace('*', '').replace('.', '').lower()
+    
+    for directory_path in glob.glob(path):
+        if not os.path.isdir(directory_path):
+            continue
+            
+        if ext in ['png', 'jpg', 'jpeg']:
+            for e in [ext, ext.upper()]:
+                all_img_paths.extend(glob.glob(os.path.join(directory_path, f"*.{e}")))
+        elif ext in ['tiff', 'tif']:
+            for e in ['tif', 'TIF', 'tiff', 'TIFF']:
+                all_img_paths.extend(glob.glob(os.path.join(directory_path, f"*.{e}")))
+
+    if not all_img_paths:
+        print(f"No files found matching extension '{extension}' in the provided path.")
+        return np.array([])
+
+    for img_path in tqdm(all_img_paths, desc="Loading Images"):
+        
+        if ext in ['png', 'jpg', 'jpeg']:
+            flag = cv2.IMREAD_COLOR if color else cv2.IMREAD_GRAYSCALE
+            img = cv2.imread(img_path, flag)
+            if img is None:
+                print(f"Failed to load standard image: {img_path}")
+                continue
+
+        elif ext in ['tiff', 'tif']:
+            img = tifffile.imread(img_path)
+            if img is None:
+                print(f"Failed to load TIFF image: {img_path}")
+                continue
+            
+            if not color and len(img.shape) == 3:
+                img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+
+        images.append(img)
+    
     try:
         images = np.array(images)
     except ValueError as e:
-        print("\n[WARNING] Could not convert to a single NumPy array!")
-        print("Your images likely have mismatched dimensions or channel counts.")
-        print(f"Error detail: {e}\n")
+        print("\n[WARNING] Array creation failed. Images have mismatched dimensions.")
+        print(f"Error details: {e}\n")
 
-    return images 
+    return images
 
 
 def get_patches(image, mask, dims = (256, 256), step=256):
+    print("Image Shape", image.shape)
+    print("Mask Shape", mask.shape)
+
+    
     if not isinstance(dims, tuple):
         print("dims must be a 1 by 2 tuple eg. (256, 256)")
         return 
