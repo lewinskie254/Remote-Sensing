@@ -1,6 +1,6 @@
 #%%
 import segmentation_models_pytorch as sm 
-from image_prep import fetch_images, save_patches, get_patches 
+from image_prep import fetch_images, save_patches_and_masks, get_patches 
 from tqdm import tqdm
 
 
@@ -28,8 +28,10 @@ test_patches = [ get_patches(test_images[i], test_masks[i], (SIZE_X, SIZE_Y), SI
 
 #%%
 print(train_patches[0][0].shape)
-#%%
-save_patches(train_patches, 'png', 'patches/train')
+
+
 
 #%%
-save_patches(test_patches, 'png', 'patches/test')
+save_patches_and_masks(train_patches, image_dir='patches/train', mask_dir='patches/train_labels')
+#%%
+save_patches_and_masks(train_patches, image_dir='patches/test', mask_dir='patches/test_labels')
