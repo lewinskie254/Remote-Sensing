@@ -81,26 +81,22 @@ def get_patches(image, mask, dims=(256, 256), step=256):
     
     return patches_image, patches_mask
 
-def save_patches(patches, format='png', output_dir='patches/images'):
-    # Ensure the directory exists
+def save_patches(patch_list, format='png', output_dir='patches/images'): 
     save_path = Path(output_dir)
     save_path.mkdir(parents=True, exist_ok=True)
     
-    # 1. Reshape the 6D array into a list of 3D images
-    # This turns (6, 6, 1, 256, 256, 3) -> (36, 256, 256, 3)
-    # We use [0,0] to drop the redundant dimension added by patchify
-    flat_patches = patches[0, 0].reshape(-1, *patches.shape[3:])
-    
-    # 2. Iterate through the flat list
-    for idx, patch in enumerate(flat_patches):
-        filename = save_path / f"patch_{idx:03d}.{format}"
+    # We add 'img_idx' to track which source image the patches came from
+    for img_idx, patches in enumerate(tqdm(patch_list, desc="Saving patches")): 
+        # Flatten the grid: (6, 6, 1, 256, 256, 3) -> (36, 256, 256, 3)
+        flat_patches = patches[0, 0].reshape(-1, *patches.shape[3:])
         
-        # Ensure data is in the correct range (0-255) for OpenCV
-        if patch.dtype != np.uint8:
-            patch = patch.astype(np.uint8)
+        for patch_idx, patch in enumerate(flat_patches):
+            # Include img_idx in the filename to prevent overwriting
+            filename = save_path / f"img{img_idx:03d}_patch{patch_idx:03d}.{format}"
             
-        cv2.imwrite(str(filename), patch)
-        
-    print(f"Successfully saved {len(flat_patches)} patches to {output_dir}")
-
-
+            if patch.dtype != np.uint8:
+                patch = patch.astype(np.uint8)
+                
+            cv2.imwrite(str(filename), patch)
+            
+    print(f"Successfully processed {len(patch_list)} images.")

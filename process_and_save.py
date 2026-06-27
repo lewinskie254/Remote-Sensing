@@ -27,19 +27,9 @@ train_patches = [ get_patches(train_images[i], train_masks[i], (SIZE_X, SIZE_Y),
 test_patches = [ get_patches(test_images[i], test_masks[i], (SIZE_X, SIZE_Y), SIZE_X) for i in tqdm(range(len(test_images)))] #default size 256 
 
 #%%
-train_images[0].shape
-
-#%%
-train_masks[0].shape
-
-
-#%%
-print(train_patches)
+print(train_patches[0][0].shape)
 #%%
 save_patches(train_patches, 'png', 'patches/train')
-save_patches(test_patches, 'png', 'patches/test')
-
 
 #%%
-BACKBONE = 'resnet34'
-process_input = sm.get_preprocessing(BACKBONE)
+save_patches(test_patches, 'png', 'patches/test')
