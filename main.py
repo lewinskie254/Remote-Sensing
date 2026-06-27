@@ -26,6 +26,12 @@ test_masks = fetch_images('png/test_labels', False)
 train_patches = [ get_patches(train_images[i], train_masks[i], (SIZE_X, SIZE_Y), SIZE_X) for i in tqdm(range(len(train_images)))] #default size 256 
 test_patches = [ get_patches(test_images[i], test_masks[i], (SIZE_X, SIZE_Y), SIZE_X) for i in tqdm(range(len(test_images)))] #default size 256 
 
+#%%
+train_images[0].shape
+
+#%%
+train_masks[0].shape
+
 
 #%%
 print(train_patches)

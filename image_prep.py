@@ -5,9 +5,8 @@ import numpy as np
 import matplotlib.pyplot as plt 
 from patchify import patchify, unpatchify
 import tifffile
-import tqdm 
-
-from tqdm import tqdm  # Use from tqdm.notebook import tqdm if in Jupyter
+from pathlib import Path
+from tqdm import tqdm  
 
 def fetch_images(path, color=True, extension='png'):
     images = []
@@ -59,37 +58,49 @@ def fetch_images(path, color=True, extension='png'):
     return images
 
 
-def get_patches(image, mask, dims = (256, 256), step=256):
-    print("Image Shape", image.shape)
-    print("Mask Shape", mask.shape)
-
-    
-    if not isinstance(dims, tuple):
-        print("dims must be a 1 by 2 tuple eg. (256, 256)")
-        return 
-    # Ensure inputs are numpy arrays
-    image, mask = np.array(image), np.array(mask)
-    
-    # Check if dimensions are divisible by the step/patch size
-    if (image.shape[0] % step != 0) or (image.shape[1] % step != 0):
-        print("Warning: Image dimensions are not divisible by patch size. Patchify may fail.")
+def get_patches(image, mask, dims=(256, 256), step=256):
+    # 1. Ensure mask has a channel dimension: (1500, 1500) -> (1500, 1500, 1)
+    if len(mask.shape) == 2:
+        mask = np.expand_dims(mask, axis=-1)
         
-    try:
-        patches_image = patchify(image, (*dims, image.shape[-1]), step=step)
-        patches_mask = patchify(mask, (*dims, 1), step=step)
-        return patches_image, patches_mask
-    except Exception as e:
-        print(f"Error during patch extraction: {e}")
-        return None, None
+    # 2. Calculate padding to reach next multiple of 256
+    h, w = image.shape[0], image.shape[1]
+    pad_h = (step - (h % step)) % step
+    pad_w = (step - (w % step)) % step
+    
+    # 3. Apply padding
+    # Image is (H, W, 3), pad H and W, but not channels (0, 0)
+    image_padded = np.pad(image, ((0, pad_h), (0, pad_w), (0, 0)), mode='constant')
+    # Mask is (H, W, 1), pad H and W, but not channels (0, 0)
+    mask_padded = np.pad(mask, ((0, pad_h), (0, pad_w), (0, 0)), mode='constant')
+    
+    # 4. Patchify
+    # The window shape must match the input shape's dimensionality
+    patches_image = patchify(image_padded, (*dims, image.shape[-1]), step=step)
+    patches_mask = patchify(mask_padded, (*dims, 1), step=step)
+    
+    return patches_image, patches_mask
 
-def save_patches(patches, format='png', path='patches/images'): 
-    for i in range(patches.shape[0]):
-        for j in range(patches.shape[1]):
-            single_patch = patches[i, j, :, :]
-            if format.lower() in ['.png', '.jpg', '.jpeg']:
-                cv2.imwrite(path + 'patch_' + str(i) + str(j) + '.' + format.lower(), single_patch)
-            elif format.lower() in ['tiff', '*.tif']: 
-                tifffile.imwrite(path + 'patch_'+ str(i) + str(j) + '.' + format.lower(), single_patch)
-
+def save_patches(patches, format='png', output_dir='patches/images'):
+    # Ensure the directory exists
+    save_path = Path(output_dir)
+    save_path.mkdir(parents=True, exist_ok=True)
+    
+    # 1. Reshape the 6D array into a list of 3D images
+    # This turns (6, 6, 1, 256, 256, 3) -> (36, 256, 256, 3)
+    # We use [0,0] to drop the redundant dimension added by patchify
+    flat_patches = patches[0, 0].reshape(-1, *patches.shape[3:])
+    
+    # 2. Iterate through the flat list
+    for idx, patch in enumerate(flat_patches):
+        filename = save_path / f"patch_{idx:03d}.{format}"
+        
+        # Ensure data is in the correct range (0-255) for OpenCV
+        if patch.dtype != np.uint8:
+            patch = patch.astype(np.uint8)
+            
+        cv2.imwrite(str(filename), patch)
+        
+    print(f"Successfully saved {len(flat_patches)} patches to {output_dir}")
 
 
