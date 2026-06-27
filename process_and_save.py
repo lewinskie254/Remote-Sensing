@@ -34,4 +34,6 @@ print(train_patches[0][0].shape)
 #%%
 save_patches_and_masks(train_patches, image_dir='patches/train', mask_dir='patches/train_labels')
 #%%
-save_patches_and_masks(train_patches, image_dir='patches/test', mask_dir='patches/test_labels')
+save_patches_and_masks(test_patches, image_dir='patches/test', mask_dir='patches/test_labels')
+
+# %%
