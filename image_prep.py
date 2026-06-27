@@ -59,50 +59,46 @@ def fetch_images(path, color=True, extension='png'):
 
 
 def get_patches(image, mask, dims=(256, 256), step=256):
-    # 1. Ensure mask has a channel dimension: (1500, 1500) -> (1500, 1500, 1)
+    # 1. Transform DIMs (1500, 1500) -> (1500, 1500, 1)
     if len(mask.shape) == 2:
         mask = np.expand_dims(mask, axis=-1)
         
-    # 2. Calculate padding to reach next multiple of 256
+    # 2. Calculate padding
     h, w = image.shape[0], image.shape[1]
     pad_h = (step - (h % step)) % step
     pad_w = (step - (w % step)) % step
     
     # 3. Apply padding
-    # Image is (H, W, 3), pad H and W, but not channels (0, 0)
     image_padded = np.pad(image, ((0, pad_h), (0, pad_w), (0, 0)), mode='constant')
-    # Mask is (H, W, 1), pad H and W, but not channels (0, 0)
     mask_padded = np.pad(mask, ((0, pad_h), (0, pad_w), (0, 0)), mode='constant')
     
     # 4. Patchify
-    # The window shape must match the input shape's dimensionality
     patches_image = patchify(image_padded, (*dims, image.shape[-1]), step=step)
     patches_mask = patchify(mask_padded, (*dims, 1), step=step)
     
     return patches_image, patches_mask
 
 def save_patches_and_masks(patch_list, image_dir='patches/images', mask_dir='patches/masks'):
-    # Create both directories
+    # Create Train and Label path directories
     img_path = Path(image_dir)
     mask_path = Path(mask_dir)
     img_path.mkdir(parents=True, exist_ok=True)
     mask_path.mkdir(parents=True, exist_ok=True)
     
     for img_idx, (img_patches, mask_patches) in enumerate(tqdm(patch_list, desc="Saving patches")):
-        # 1. Flatten the image grid: (6, 6, 1, 256, 256, 3) -> (36, 256, 256, 3)
+        #Flatten image (6, 6, 1, 256, 256, 3) -> (36, 256, 256, 3)
         flat_img = img_patches[0, 0].reshape(-1, *img_patches.shape[3:])
         
-        # 2. Flatten the mask grid: (6, 6, 1, 256, 256, 1) -> (36, 256, 256, 1)
+        #Flatten mask (6, 6, 1, 256, 256, 1) -> (36, 256, 256, 1)
         flat_mask = mask_patches[0, 0].reshape(-1, *mask_patches.shape[3:])
         
-        # 3. Iterate through both lists simultaneously
+
         for patch_idx, (img_patch, mask_patch) in enumerate(zip(flat_img, flat_mask)):
-            # Define filenames
+            # filenames
             img_filename = img_path / f"img{img_idx:03d}_patch{patch_idx:03d}.png"
             mask_filename = mask_path / f"img{img_idx:03d}_patch{patch_idx:03d}.png"
             
-            # Ensure types are correct for saving
-            # Images need uint8 (0-255), masks are often 0/1 or 0-255 grayscale
+            # Save as UINT 8 - normal for pics 
             img_save = img_patch.astype(np.uint8)
             mask_save = mask_patch.astype(np.uint8)
             
