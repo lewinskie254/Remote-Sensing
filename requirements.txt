@@ -7,3 +7,5 @@ numpy
 matplotlib 
 patchify
 tiffile
+huggingface-hub
+rasterio
