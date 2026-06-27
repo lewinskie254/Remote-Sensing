@@ -5,8 +5,8 @@ import numpy as np
 
 class SegmentationDataset(Dataset):
     def __init__(self, image_paths, mask_paths, preprocess_fn=None):
-        self.image_paths = sorted(image_paths)
-        self.mask_paths = sorted(mask_paths)
+        self.image_paths = image_paths
+        self.mask_paths = mask_paths
         self.preprocess_fn = preprocess_fn
 
     def __len__(self):

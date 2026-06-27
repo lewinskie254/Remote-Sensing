@@ -10,3 +10,5 @@ tiff/
 patches/ 
 
 .env 
+
+__pycache__/
