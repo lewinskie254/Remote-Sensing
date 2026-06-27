@@ -8,6 +8,8 @@ from dotenv import load_dotenv
 from huggingface_hub import login
 import torch
 from data_loader import SegmentationDataset
+from torch.utils.data import DataLoader
+
 
 
 load_dotenv()
@@ -39,8 +41,6 @@ y_train = fetch_images(y_train_path, False)
 
 
 # %%
-from torch.utils.data import DataLoader
-
 dataset = SegmentationDataset(X_train, y_train, preprocess_input)
 loader = DataLoader(dataset, batch_size=16, shuffle=True, num_workers=2)
 
