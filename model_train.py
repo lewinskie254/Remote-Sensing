@@ -7,7 +7,7 @@ import os
 from dotenv import load_dotenv
 from huggingface_hub import login
 import torch
-from .data_loader import SegmentationDataset
+from segmentation_loader import SegmentationDataset
 from torch.utils.data import DataLoader
 import torch.optim as optim
 import torch.nn as nn
