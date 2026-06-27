@@ -1,33 +1,42 @@
 import torch
 from torch.utils.data import Dataset
-import cv2
 import numpy as np
 
 class SegmentationDataset(Dataset):
-    def __init__(self, image_paths, mask_paths, preprocess_fn=None):
-        self.image_paths = image_paths
-        self.mask_paths = mask_paths
+    def __init__(self, images, masks, preprocess_fn=None):
+        # These are now lists of numpy arrays
+        self.images = images
+        self.masks = masks
         self.preprocess_fn = preprocess_fn
 
     def __len__(self):
-        return len(self.image_paths)
+        return len(self.images)
 
     def __getitem__(self, idx):
-        # Load image and mask
-        image = cv2.imread(str(self.image_paths[idx]))
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        # 1. Access the pre-loaded image and mask
+        image = self.images[idx]
+        mask = self.masks[idx]
         
-        mask = cv2.imread(str(self.mask_paths[idx]), cv2.IMREAD_GRAYSCALE)
-        
-        # Apply preprocessing
+        # 2. Apply preprocessing (if provided by smp)
         if self.preprocess_fn:
             image = self.preprocess_fn(image)
         
-        # Convert to Tensor (C, H, W)
-        image_tensor = torch.from_numpy(image.transpose(2, 0, 1)).float()
-        mask_tensor = torch.from_numpy(mask).float().unsqueeze(0) # Add channel dim
+        # 3. Convert to Tensor
+        # Check if shape is (H, W, C) -> transpose to (C, H, W)
+        if image.ndim == 3:
+            image_tensor = torch.from_numpy(image.transpose(2, 0, 1)).float()
+        else:
+            image_tensor = torch.from_numpy(image).float()
+            
+        # 4. Handle Mask
+        # If mask is 2D (H, W), add channel dimension -> (1, H, W)
+        if mask.ndim == 2:
+            mask_tensor = torch.from_numpy(mask).float().unsqueeze(0)
+        else:
+            mask_tensor = torch.from_numpy(mask).float()
         
-        # Normalize mask if necessary (e.g., 0-1 instead of 0-255)
-        mask_tensor = mask_tensor / 255.0
-        
+        # Ensure mask is normalized (if it is 0-255)
+        if mask_tensor.max() > 1.0:
+            mask_tensor = mask_tensor / 255.0
+            
         return image_tensor, mask_tensor

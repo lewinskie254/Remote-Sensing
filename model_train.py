@@ -46,7 +46,7 @@ y_train = fetch_images(y_train_path, False)
 
 # %%
 dataset = SegmentationDataset(X_train, y_train, preprocess_input)
-loader = DataLoader(dataset, batch_size=16, shuffle=True, num_workers=2)
+loader = DataLoader(dataset, batch_size=16, shuffle=True, num_workers=0)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = model.to(device)
