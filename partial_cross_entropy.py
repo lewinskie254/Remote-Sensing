@@ -4,17 +4,23 @@ import torch.nn.functional as F
 
 class PartialBCELoss(nn.Module):
 
-    def __init__(self, ignore_index=255):
+    def __init__(self, ignore_index=128):
         super().__init__()
         self.ignore_index = ignore_index
         self.bce = nn.BCEWithLogitsLoss(reduction='none')
 
-
     def forward(self, pred, target):
 
         valid = (target != self.ignore_index).float()
+
         target = target.clone()
+
+        # Ignore padding
         target[target == self.ignore_index] = 0
+
+        # Convert buildings to 1
+        target[target == 255] = 1
+
         loss = self.bce(pred, target.float())
         loss = (loss * valid).sum() / (valid.sum() + 1e-8)
 

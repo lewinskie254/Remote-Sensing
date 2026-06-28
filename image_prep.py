@@ -69,8 +69,8 @@ def get_patches(image, mask, dims=(256, 256), step=256):
     pad_w = (step - (w % step)) % step
     
     # 3. Apply padding
-    image_padded = np.pad(image, ((0, pad_h), (0, pad_w), (0, 0)), mode='constant')
-    mask_padded = np.pad(mask, ((0, pad_h), (0, pad_w), (0, 0)), mode='constant')
+    image_padded = np.pad(image, ((0, pad_h), (0, pad_w), (0, 0)), mode='constant', constant_values=128)
+    mask_padded = np.pad(mask, ((0, pad_h), (0, pad_w), (0, 0)), mode='constant', constant_values=128)
     
     # 4. Patchify
     patches_image = patchify(image_padded, (*dims, image.shape[-1]), step=step)
