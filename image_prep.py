@@ -107,3 +107,49 @@ def save_patches_and_masks(patch_list, image_dir='patches/images', mask_dir='pat
             cv2.imwrite(str(mask_filename), mask_save)
             
     print("Successfully saved all image and mask patches.")
+
+
+
+def get_128_patches(image, mask):
+    PATCH_SIZE = 128
+
+    # Ensure mask has a channel dimension
+    if mask.ndim == 2:
+        mask = np.expand_dims(mask, axis=-1)
+
+    # Original dimensions
+    h, w = image.shape[:2]
+
+    # Calculate required padding
+    pad_h = (PATCH_SIZE - (h % PATCH_SIZE)) % PATCH_SIZE
+    pad_w = (PATCH_SIZE - (w % PATCH_SIZE)) % PATCH_SIZE
+
+    # Pad image and mask
+    image_padded = np.pad(
+        image,
+        ((0, pad_h), (0, pad_w), (0, 0)),
+        mode="constant",
+        constant_values=128
+    )
+
+    mask_padded = np.pad(
+        mask,
+        ((0, pad_h), (0, pad_w), (0, 0)),
+        mode="constant",
+        constant_values=128
+    )
+
+    # Extract patches
+    patches_image = patchify(
+        image_padded,
+        (PATCH_SIZE, PATCH_SIZE, image.shape[-1]),
+        step=PATCH_SIZE
+    )
+
+    patches_mask = patchify(
+        mask_padded,
+        (PATCH_SIZE, PATCH_SIZE, 1),
+        step=PATCH_SIZE
+    )
+
+    return patches_image, patches_mask
